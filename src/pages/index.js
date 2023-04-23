@@ -7,8 +7,59 @@ import axios from "axios";
 const inter = Inter({ subsets: ["latin"] });
 
 async function sendDataToESP8266(data) {
-  const response = await axios.post("http://192.168.1.100/data", data);
-  return response.data;
+  if ("bluetooth" in navigator) {
+    const scan = document.querySelector("#scan");
+    const batteryIndicator = document.querySelector("#battery-indicator");
+
+    scan &&
+      scan.addEventListener("click", async () => {
+        alert("scan is wrking");
+        const connectToDevice = async ({ bleService, bleCharacteristic }) => {
+          try {
+            const device = await navigator.bluetooth.requestDevice({
+              filters: [
+                {
+                  services: [bleService]
+                }
+              ]
+            });
+
+            device.addEventListener("gattserverdisconnected", () => {
+              batteryIndicator.value = 0;
+            });
+
+            const server = await device.gatt.connect();
+            const service = await server.getPrimaryService(bleService);
+            const characteristic = await service.getCharacteristic(
+              bleCharacteristic
+            );
+            await characteristic.startNotifications();
+
+            characteristic.addEventListener(
+              "characteristicvaluechanged",
+              (e) => {
+                const value = e.target.value.getUint8(0);
+
+                console.log(`${bleCharacteristic} changed`, value);
+
+                batteryIndicator.value = value;
+              }
+            );
+
+            characteristic.readValue();
+
+            return characteristic;
+          } catch (err) {
+            console.error(err);
+          }
+        };
+
+        await connectToDevice({
+          bleService: "battery_service",
+          bleCharacteristic: "battery_level"
+        });
+      });
+  }
 }
 
 export default function Home() {
