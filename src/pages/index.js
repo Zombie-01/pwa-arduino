@@ -7,7 +7,7 @@ import axios from "axios";
 const inter = Inter({ subsets: ["latin"] });
 
 async function sendDataToESP8266(data) {
-  const response = await axios.post("http://192.168.1.100/data", data);
+  const response = await axios.post("https://192.168.1.100/data", data);
   return response.data;
 }
 
