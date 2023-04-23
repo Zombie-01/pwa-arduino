@@ -1,5 +1,11 @@
-import '@/styles/globals.css'
+import { register } from "next-offline/runtime";
 
-export default function App({ Component, pageProps }) {
-  return <Component {...pageProps} />
+function MyApp({ Component, pageProps }) {
+  return <Component {...pageProps} />;
 }
+
+if (typeof navigator !== "undefined") {
+  register("/sw.js");
+}
+
+export default MyApp;
